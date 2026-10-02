@@ -2,7 +2,36 @@
 
 Gestione interventi / rapportini con auth, clienti, commesse, ticket, materiali, geo (PostGIS) e stampa PDF. Web React; in seguito Flutter + GPS.
 
-## Cosa fa
+## Policy IA (questo progetto)
+
+L’assistente IA è usato come **tutor / learning**, non come ghostwriter del gestionale.
+
+| Consentito | Non consentito (di default) |
+|------------|-----------------------------|
+| Spiegare concetti, review del codice scritto dall’autore | Generare file/moduli/API interi al posto suo |
+| Guidare il prossimo passo, snippit minimi se bloccato | Scaffold completo non richiesto |
+| Operazioni ripetitive / meccaniche (rename massivi, aggiornare README, docker-compose, fix banali su richiesta) | “Scrivi tu tutto il backend/frontend” |
+| Valutare scelte di dominio e segnalare rischi | Inventare requisiti e implementarli in silenzio |
+
+L’autore scrive il codice; l’IA spiega, sfida le scelte deboli e sblocca. Eccezione: task ripetitivi o pezzi esplicitamente richiesti (“sistema questo”, “aggiorna il README”).
+
+Regole Cursor: `.cursor/rules/senior-mentor.mdc`.
+
+## Dove siamo (stato attuale)
+
+Fase 1 **API + DB** — in corso.
+
+| Fatto | Non ancora |
+|-------|------------|
+| Docker PostGIS (`postgis/postgis:17-3.5-alpine`) | Endpoint HTTP completi (users/clienti update-delete; tutto il resto) |
+| Schema `init_db` + layer `database.py` (CRUD users, clienti, commesse, ticket, interventi, materiali, materiali_utilizzati) | Bootstrap primo admin (uovo/gallina su `POST /users`) |
+| Auth: bcrypt, login JWT, `HTTPBearer`, `POST /users` (admin) | Validazione `stato` / ruoli in API; filtri data |
+| `GET /health`, `POST /login`, `POST/GET /clienti`, `GET /clienti/{id}` | Web React, PDF, Flutter |
+| psycopg `dict_row`, geo lat/lon ↔ PostGIS | Password change su update user; bozza/PDF intervento |
+
+**Prossimo passo:** esporre in `main.py` (+ modelli in `BaseModels.py`) gli endpoint che già esistono in `database.py`, sezione per sezione: **users** (GET/PUT/DELETE) → chiudere **clienti** (PUT/DELETE) → **commesse** → ticket → interventi → materiali.
+
+## Cosa fa (obiettivo prodotto)
 
 - Auth utente / password con ruoli (JWT)
 - Anagrafica: **clienti → commesse → ticket**; **interventi** su cliente (con o senza ticket)
@@ -31,9 +60,9 @@ User
 Cliente
   ├── Commessa  (FK → Cliente; posizione geo)
   │     ├── Ticket              (FK → Commessa; pezzi di lavoro)
-  │     └── materiali_utilizzati (FK → Commessa + materiali)
-  └── Intervento (FK → Cliente; ticket_id opzionale)
-        └── (ex “rapportino”: ore, data, … — campi da affinare)
+  │     └── materiali_utilizzati (FK → Commessa; materiale_id opzionale)
+  └── Intervento (FK → Cliente + User; ticket_id opzionale)
+        └── (ore, data — campi da affinare)
 
 Materiale  (catalogo)
   └── usato in materiali_utilizzati
@@ -99,8 +128,9 @@ Auth: JWT Bearer (`sub`, `role`, `exp`).
 
 | Campo | Note |
 |-------|------|
+| `user_id` | FK → users, obbligatorio |
 | `cliente_id` | FK → clienti, obbligatorio |
-| `ticket_id` | FK → ticket, **opzionale** |
+| `ticket_id` | FK → ticket, **opzionale** (`ON DELETE SET NULL`) |
 | `ore_lavorate` / `ore_totali` | INTEGER (da chiarire semantica) |
 | `data` | DATE |
 
@@ -109,16 +139,19 @@ Auth: JWT Bearer (`sub`, `role`, `exp`).
 | Campo | Note |
 |-------|------|
 | `nome` / `descrizione` | |
-| `costo_unitario` | `NUMERIC(5, 2)` |
+| `costo_unitario` | `NUMERIC(10, 2)` |
+| `unita` | es. `pz`, `m` |
+| `fornitore` | opzionale |
 
 ### materiali_utilizzati (su commessa)
 
 | Campo | Note |
 |-------|------|
-| `materiale_id` | FK → materiali |
-| `commessa_id` | FK → commesse |
-| `nome` / `descrizione` / `costo_unitario` | snapshot al momento dell’uso |
+| `materiale_id` | FK → materiali, **opzionale** (NULL = costo one-shot) |
+| `commessa_id` | FK → commesse (`ON DELETE CASCADE`) |
+| `nome` | obbligatorio (da catalogo o libero) |
 | `quantita` | INTEGER |
+| `costo_totale` | `NUMERIC(10, 2)` |
 
 ## Geo / PostGIS
 
@@ -130,7 +163,7 @@ Tabella di sistema `spatial_ref_sys`: non toccarla (SRID, es. 4326).
 
 ## Ordine di lavoro
 
-1. **API + DB** — schema, auth, CRUD anagrafiche / interventi
+1. **API + DB** — schema, auth, CRUD anagrafiche / interventi ← *qui*
 2. **Web React**
 3. **Stampa PDF**
 4. **Flutter + GPS** (scrive su `users_positions`)
@@ -142,6 +175,7 @@ Tabella di sistema `spatial_ref_sys`: non toccarla (SRID, es. 4326).
 ├── backend/
 │   ├── main.py
 │   ├── database.py
+│   ├── BaseModels.py
 │   ├── auth.py
 │   ├── hash.py
 │   ├── docker-compose.yml   # PostGIS 17

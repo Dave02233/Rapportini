@@ -1,4 +1,4 @@
-from fastapi import Header, HTTPException, Depends
+from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from datetime import datetime, timedelta, timezone
@@ -11,7 +11,7 @@ load_dotenv()
 
 secret = os.getenv("JWT_SECRET_KEY")
 
-if secret == None:
+if secret is None:
     raise ValueError("JWT_SECRET_KEY is not set")
 
 def create_token(user_id: int, role: str):
