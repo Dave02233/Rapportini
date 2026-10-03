@@ -19,17 +19,16 @@ Regole Cursor: `.cursor/rules/senior-mentor.mdc`.
 
 ## Dove siamo (stato attuale)
 
-Fase 1 **API + DB** — in corso.
+Fase 1 **API + DB** — sostanzialmente chiusa (manca bootstrap admin).
 
 | Fatto | Non ancora |
 |-------|------------|
-| Docker PostGIS (`postgis/postgis:17-3.5-alpine`) | Endpoint HTTP completi (users/clienti update-delete; tutto il resto) |
-| Schema `init_db` + layer `database.py` (CRUD users, clienti, commesse, ticket, interventi, materiali, materiali_utilizzati) | Bootstrap primo admin (uovo/gallina su `POST /users`) |
-| Auth: bcrypt, login JWT, `HTTPBearer`, `POST /users` (admin) | Validazione `stato` / ruoli in API; filtri data |
-| `GET /health`, `POST /login`, `POST/GET /clienti`, `GET /clienti/{id}` | Web React, PDF, Flutter |
-| psycopg `dict_row`, geo lat/lon ↔ PostGIS | Password change su update user; bozza/PDF intervento |
+| Docker PostGIS, schema `init_db`, psycopg `dict_row` | Bootstrap primo admin (uovo/gallina su `POST /users`) |
+| Layer `database.py`: CRUD completo (users, posizioni, clienti, commesse, ticket, interventi, materiali, materiali_utilizzati) | Filtri data / ricerca avanzata |
+| Auth JWT + endpoint HTTP in `main.py` / `BaseModels.py` (ruoli: admin scrive anagrafiche; tecnico legge anagrafiche e gestisce i propri interventi; materiali solo admin) | Password change su update user |
+| Validazione `role` / `stato`; geo lat/lon ↔ PostGIS; `LookupError`→404 / `ValueError`→409 | Web React, PDF, Flutter |
 
-**Prossimo passo:** esporre in `main.py` (+ modelli in `BaseModels.py`) gli endpoint che già esistono in `database.py`, sezione per sezione: **users** (GET/PUT/DELETE) → chiudere **clienti** (PUT/DELETE) → **commesse** → ticket → interventi → materiali.
+**Prossimo passo tipico:** bootstrap admin (o seed manuale), smoke test end-to-end; poi **fase 2 Web React**.
 
 ## Cosa fa (obiettivo prodotto)
 
@@ -163,8 +162,8 @@ Tabella di sistema `spatial_ref_sys`: non toccarla (SRID, es. 4326).
 
 ## Ordine di lavoro
 
-1. **API + DB** — schema, auth, CRUD anagrafiche / interventi ← *qui*
-2. **Web React**
+1. **API + DB** — schema, auth, CRUD HTTP ← *quasi chiusa* (resta bootstrap admin)
+2. **Web React** ← *prossima*
 3. **Stampa PDF**
 4. **Flutter + GPS** (scrive su `users_positions`)
 

@@ -137,7 +137,7 @@ def get_user_by_id(user_id: int):
         with get_connection() as conn:
             row = conn.execute(get_user_by_id_sql, (user_id,)).fetchone()
             if row is None:
-                raise ValueError("User not found")
+                raise LookupError("User not found")
             return row
     except psycopg.Error as e:
         raise RuntimeError(f"get_user_by_id failed: {e}") from e
@@ -151,7 +151,7 @@ def update_user(user_id: int, username: str, role: str, costo_orario: float):
             row = conn.execute(update_user_sql, (username, role, costo_orario, user_id)).fetchone()
             conn.commit()
             if row is None:
-                raise ValueError("User not found")
+                raise LookupError("User not found")
             return row
     except UniqueViolation:
         raise ValueError("Username already exists") from None
@@ -167,7 +167,7 @@ def delete_user(user_id: int):
             row = conn.execute(delete_user_sql, (user_id,)).fetchone()
             conn.commit()
             if row is None:
-                raise ValueError("User not found")
+                raise LookupError("User not found")
             return row
     except ForeignKeyViolation:
         raise ValueError("User in use") from None
@@ -244,7 +244,7 @@ def get_cliente_by_id(cliente_id: int):
         with get_connection() as conn:
             row = conn.execute(get_cliente_by_id_sql, (cliente_id,)).fetchone()
             if row is None:
-                raise ValueError("Cliente not found")
+                raise LookupError("Cliente not found")
             return row
     except psycopg.Error as e:
         raise RuntimeError(f"get_cliente_by_id failed: {e}") from e
@@ -259,7 +259,7 @@ def update_cliente(cliente_id: int, ragione_sociale: str, partita_iva: str):
             row = conn.execute(update_cliente_sql, (ragione_sociale, partita_iva, cliente_id)).fetchone()
             conn.commit()
             if row is None:
-                raise ValueError("Cliente not found")
+                raise LookupError("Cliente not found")
             return row
     except UniqueViolation:
         raise ValueError("Ragione sociale or partita IVA already exists") from None
@@ -275,7 +275,7 @@ def delete_cliente(cliente_id: int):
             row = conn.execute(delete_cliente_sql, (cliente_id,)).fetchone()
             conn.commit()
             if row is None:
-                raise ValueError("Cliente not found")
+                raise LookupError("Cliente not found")
             return row
     except ForeignKeyViolation:
         raise ValueError("Cliente in use") from None
@@ -320,7 +320,7 @@ def get_commessa_by_id(commessa_id: int):
         with get_connection() as conn:
             row = conn.execute(get_commessa_by_id_sql, (commessa_id,)).fetchone()
             if row is None:
-                raise ValueError("Commessa not found")
+                raise LookupError("Commessa not found")
             return row
     except psycopg.Error as e:
         raise RuntimeError(f"get_commessa_by_id failed: {e}") from e
@@ -348,7 +348,7 @@ def update_commessa(commessa_id: int, cliente_id: int, data_inizio: date | None,
             row = conn.execute(update_commessa_sql, (cliente_id, data_inizio, data_fine, nome, descrizione, stato, budget, lon, lat, commessa_id)).fetchone()
             conn.commit()
             if row is None:
-                raise ValueError("Commessa not found")
+                raise LookupError("Commessa not found")
             return row
     except ForeignKeyViolation:
         raise ValueError("Cliente not found") from None
@@ -365,7 +365,7 @@ def delete_commessa(commessa_id: int):
             row = conn.execute(delete_commessa_sql, (commessa_id,)).fetchone()
             conn.commit()
             if row is None:
-                raise ValueError("Commessa not found")
+                raise LookupError("Commessa not found")
             return row
     except psycopg.Error as e:
         raise RuntimeError(f"delete_commessa failed: {e}") from e
@@ -404,7 +404,7 @@ def get_ticket_by_id(ticket_id: int):
         with get_connection() as conn:
             row = conn.execute(get_ticket_by_id_sql, (ticket_id,)).fetchone()
             if row is None:
-                raise ValueError("Ticket not found")
+                raise LookupError("Ticket not found")
             return row
     except psycopg.Error as e:
         raise RuntimeError(f"get_ticket_by_id failed: {e}") from e
@@ -429,7 +429,7 @@ def update_ticket(ticket_id: int, commessa_id: int, nome: str, descrizione: str 
             row = conn.execute(update_ticket_sql, (commessa_id, nome, descrizione, costo_totale, stato, ticket_id)).fetchone()
             conn.commit()
             if row is None:
-                raise ValueError("Ticket not found")
+                raise LookupError("Ticket not found")
             return row
     except ForeignKeyViolation:
         raise ValueError("Commessa not found") from None
@@ -445,7 +445,7 @@ def delete_ticket(ticket_id: int):
             row = conn.execute(delete_ticket_sql, (ticket_id,)).fetchone()
             conn.commit()
             if row is None:
-                raise ValueError("Ticket not found")
+                raise LookupError("Ticket not found")
             return row
     except psycopg.Error as e:
         raise RuntimeError(f"delete_ticket failed: {e}") from e
@@ -484,7 +484,7 @@ def get_intervento_by_id(intervento_id: int):
         with get_connection() as conn:
             row = conn.execute(get_intervento_by_id_sql, (intervento_id,)).fetchone()
             if row is None:
-                raise ValueError("Intervento not found")
+                raise LookupError("Intervento not found")
             return row
     except psycopg.Error as e:
         raise RuntimeError(f"get_intervento_by_id failed: {e}") from e
@@ -519,7 +519,7 @@ def update_intervento(intervento_id: int, user_id: int, cliente_id: int, ticket_
             row = conn.execute(update_intervento_sql, (user_id, cliente_id, ticket_id, ore_lavorate, ore_totali, data, intervento_id)).fetchone()
             conn.commit()
             if row is None:
-                raise ValueError("Intervento not found")
+                raise LookupError("Intervento not found")
             return row
     except ForeignKeyViolation:
         raise ValueError("User, cliente or ticket not found") from None
@@ -535,7 +535,7 @@ def delete_intervento(intervento_id: int):
             row = conn.execute(delete_intervento_sql, (intervento_id,)).fetchone()
             conn.commit()
             if row is None:
-                raise ValueError("Intervento not found")
+                raise LookupError("Intervento not found")
             return row
     except psycopg.Error as e:
         raise RuntimeError(f"delete_intervento failed: {e}") from e
@@ -572,7 +572,7 @@ def get_materiale_by_id(materiale_id: int):
         with get_connection() as conn:
             row = conn.execute(get_materiale_by_id_sql, (materiale_id,)).fetchone()
             if row is None:
-                raise ValueError("Materiale not found")
+                raise LookupError("Materiale not found")
             return row
     except psycopg.Error as e:
         raise RuntimeError(f"get_materiale_by_id failed: {e}") from e
@@ -587,7 +587,7 @@ def update_materiale(materiale_id: int, nome: str, descrizione: str | None, cost
             row = conn.execute(update_materiale_sql, (nome, descrizione, costo_unitario, unita, fornitore, materiale_id)).fetchone()
             conn.commit()
             if row is None:
-                raise ValueError("Materiale not found")
+                raise LookupError("Materiale not found")
             return row
     except psycopg.Error as e:
         raise RuntimeError(f"update_materiale failed: {e}") from e
@@ -601,7 +601,7 @@ def delete_materiale(materiale_id: int):
             row = conn.execute(delete_materiale_sql, (materiale_id,)).fetchone()
             conn.commit()
             if row is None:
-                raise ValueError("Materiale not found")
+                raise LookupError("Materiale not found")
             return row
     except ForeignKeyViolation:
         raise ValueError("Materiale in use") from None
@@ -645,7 +645,7 @@ def update_materiale_utilizzato(materiale_utilizzato_id: int, materiale_id: int 
             row = conn.execute(update_materiale_utilizzato_sql, (materiale_id, nome, quantita, costo_totale, materiale_utilizzato_id)).fetchone()
             conn.commit()
             if row is None:
-                raise ValueError("Materiale utilizzato not found")
+                raise LookupError("Materiale utilizzato not found")
             return row
     except ForeignKeyViolation:
         raise ValueError("Materiale not found") from None
@@ -661,7 +661,7 @@ def delete_materiale_utilizzato(materiale_utilizzato_id: int):
             row = conn.execute(delete_materiale_utilizzato_sql, (materiale_utilizzato_id,)).fetchone()
             conn.commit()
             if row is None:
-                raise ValueError("Materiale utilizzato not found")
+                raise LookupError("Materiale utilizzato not found")
             return row
     except psycopg.Error as e:
         raise RuntimeError(f"delete_materiale_utilizzato failed: {e}") from e
