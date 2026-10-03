@@ -19,16 +19,20 @@ Regole Cursor: `.cursor/rules/senior-mentor.mdc`.
 
 ## Dove siamo (stato attuale)
 
-Fase 1 **API + DB** — sostanzialmente chiusa (manca bootstrap admin).
+Fase 1 **API + DB** — chiusa per il percorso attuale.  
+Fase 2 **Web React** — in avvio (Node LTS / scaffold Vite).
 
 | Fatto | Non ancora |
 |-------|------------|
-| Docker PostGIS, schema `init_db`, psycopg `dict_row` | Bootstrap primo admin (uovo/gallina su `POST /users`) |
-| Layer `database.py`: CRUD completo (users, posizioni, clienti, commesse, ticket, interventi, materiali, materiali_utilizzati) | Filtri data / ricerca avanzata |
-| Auth JWT + endpoint HTTP in `main.py` / `BaseModels.py` (ruoli: admin scrive anagrafiche; tecnico legge anagrafiche e gestisce i propri interventi; materiali solo admin) | Password change su update user |
-| Validazione `role` / `stato`; geo lat/lon ↔ PostGIS; `LookupError`→404 / `ValueError`→409 | Web React, PDF, Flutter |
+| Docker PostGIS, schema `init_db`, psycopg `dict_row` | Filtri data / ricerca avanzata |
+| Layer `database.py`: CRUD completo (users, posizioni, clienti, commesse, ticket, interventi, materiali, materiali_utilizzati) | Password change su update user |
+| Auth JWT + endpoint HTTP in `main.py` / `BaseModels.py` (ruoli: admin scrive anagrafiche; tecnico legge anagrafiche e gestisce i propri interventi; materiali solo admin) | Frontend React (login, CRUD UI, stats/grafici) |
+| Validazione `role` / `stato`; geo lat/lon ↔ PostGIS; `LookupError`→404 / `ValueError`→409 | PDF, Flutter |
+| Bootstrap admin idempotente in `init_db` (seed `admin`/`admin` se non esiste già un admin) | HTTPS / TLS (solo al deploy; in locale HTTP ok) |
+| Bench throwaway `test/index.html` servita da API (`/` e `/bench`) per smoke test | |
+| CORS whitelist `http://localhost:5173` (dev Vite; same-origin bench non ne ha bisogno) | |
 
-**Prossimo passo tipico:** bootstrap admin (o seed manuale), smoke test end-to-end; poi **fase 2 Web React**.
+**Prossimo passo tipico:** scaffold Vite + React in `frontend/` → login JWT → liste/form anagrafiche → in seguito grafici (es. Recharts).
 
 ## Cosa fa (obiettivo prodotto)
 
@@ -46,9 +50,11 @@ Fase 1 **API + DB** — sostanzialmente chiusa (manca bootstrap admin).
 |-------|------------|
 | API | FastAPI + Uvicorn |
 | DB | PostgreSQL 17 + PostGIS (`postgis/postgis:17-3.5-alpine`); SQL diretto (psycopg, niente ORM) |
-| Web | React (SPA leggera) |
+| Web | React + Vite (SPA); JS + CSS plain; `fetch`; react-router; auth via Context + JWT in `localStorage` |
+| Grafici (più avanti) | Una lib (es. Recharts), quando ci sono le viste stats |
 | Mobile (fase 4) | Flutter / Dart — **non** React Native |
 | PDF | Generazione lato server (stessa API) |
+| TLS | Reverse proxy / hosting in produzione — non nel codice business |
 
 ## Dominio (decisioni)
 
@@ -162,8 +168,8 @@ Tabella di sistema `spatial_ref_sys`: non toccarla (SRID, es. 4326).
 
 ## Ordine di lavoro
 
-1. **API + DB** — schema, auth, CRUD HTTP ← *quasi chiusa* (resta bootstrap admin)
-2. **Web React** ← *prossima*
+1. **API + DB** — schema, auth, CRUD HTTP, bootstrap admin, bench smoke ← *chiusa*
+2. **Web React** ← *in corso* (scaffold → login → anagrafiche → stats)
 3. **Stampa PDF**
 4. **Flutter + GPS** (scrive su `users_positions`)
 
@@ -179,8 +185,10 @@ Tabella di sistema `spatial_ref_sys`: non toccarla (SRID, es. 4326).
 │   ├── hash.py
 │   ├── docker-compose.yml   # PostGIS 17
 │   └── requirements.txt
-├── frontend/         # React (fase 2)
-├── mobile/           # Flutter (fase 4)
+├── test/
+│   └── index.html           # bench API throwaway (`/` e `/bench`)
+├── frontend/                # React + Vite (fase 2)
+├── mobile/                  # Flutter (fase 4)
 └── README.md
 ```
 
@@ -208,3 +216,6 @@ uvicorn main:app --reload
 - Un’unica API per web e Flutter.
 - Semplicità: SQL esplicito, dipendenze minime.
 - `CREATE TABLE IF NOT EXISTS` non altera tabelle già create: se cambi colonne, serve `ALTER` o reset volume.
+- Admin di default in locale: `admin` / `admin` (solo seed se non esiste già un admin; cambiare fuori dal play locale).
+- Bench: con API avviata, apri `http://127.0.0.1:8000/bench` (stesso origin → CORS non serve).
+- Dev frontend: Vite su `:5173` parla all’API su `:8000` → CORS whitelist; in prod si potrà servire la SPA dallo stesso host (HTTPS sul reverse proxy).

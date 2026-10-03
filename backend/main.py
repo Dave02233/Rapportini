@@ -1,16 +1,35 @@
 from fastapi import FastAPI, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from pathlib import Path
 
 import BaseModels
 import database
 import auth
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 database.init_db()
 
 @app.get("/health")
 def health():
     return {"ok": True}
+
+@app.get("/bench")
+def bench():
+    bench_path = Path(__file__).parent.parent / "test" / "index.html"
+    return FileResponse(bench_path)
+
+@app.get("/")
+def index():
+    index_path = Path(__file__).parent.parent / "test" / "index.html"
+    return FileResponse(index_path)
 
 # --- Users ---
 @app.post("/users")

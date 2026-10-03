@@ -19,6 +19,7 @@ def get_connection():
 def init_db():
 
     init_sql = """
+
     CREATE EXTENSION IF NOT EXISTS postgis;
 
     CREATE TABLE IF NOT EXISTS users (
@@ -28,7 +29,7 @@ def init_db():
     role TEXT NOT NULL CHECK (role IN ('tecnico', 'admin')),
     costo_orario NUMERIC(5, 2) NOT NULL
     );
-
+    
     CREATE TABLE IF NOT EXISTS users_positions (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -47,7 +48,7 @@ def init_db():
     cliente_id INTEGER NOT NULL REFERENCES clienti(id),
     data_inizio DATE,
     data_fine DATE,
-    nome TEXT NOT NULL,
+    nome TEXT NOT NULL UNIQUE,
     descrizione TEXT,
     stato TEXT NOT NULL CHECK (stato IN ('in_corso', 'completata', 'annullata')),
     budget NUMERIC(10, 2) NOT NULL,
@@ -57,7 +58,7 @@ def init_db():
     CREATE TABLE IF NOT EXISTS ticket (
     id SERIAL PRIMARY KEY,
     commessa_id INTEGER NOT NULL REFERENCES commesse(id) ON DELETE CASCADE,
-    nome TEXT NOT NULL,
+    nome TEXT NOT NULL UNIQUE,
     descrizione TEXT,
     costo_totale NUMERIC(10, 2) NOT NULL,
     stato TEXT NOT NULL CHECK (stato IN ('in_corso', 'completato', 'annullato'))
@@ -70,7 +71,8 @@ def init_db():
     ticket_id INTEGER REFERENCES ticket(id) ON DELETE SET NULL,
     ore_lavorate INTEGER NOT NULL,
     ore_totali INTEGER NOT NULL,
-    data DATE NOT NULL
+    data DATE NOT NULL,
+    note TEXT
     );
 
     CREATE TABLE IF NOT EXISTS materiali (
@@ -90,14 +92,39 @@ def init_db():
     quantita INTEGER NOT NULL,
     costo_totale NUMERIC(10, 2) NOT NULL
     );
-    """
 
+    """
+    
     try:
         with get_connection() as conn:
             conn.execute(init_sql)
             conn.commit()
     except psycopg.Error as e:
         raise RuntimeError(f"init_db failed: {e}") from e
+    
+      
+    default_user = {
+        "username": "admin",
+        "password": "admin",
+        "role": "admin",
+        "costo_orario": 0.00
+    }
+
+    default_user_psw_hash = hash.hash_password(default_user["password"])
+
+    default_user_sql = """
+    INSERT INTO users (username, password_hash, role, costo_orario)
+    SELECT %s, %s, %s, %s
+    WHERE NOT EXISTS (SELECT 1 FROM users WHERE role = 'admin');
+    """
+
+    try:
+        with get_connection() as conn:
+            conn.execute(default_user_sql, (default_user["username"], default_user_psw_hash, default_user["role"], default_user["costo_orario"]))
+            conn.commit()
+    except psycopg.Error as e:
+        raise RuntimeError(f"default_user_insert failed: {e}") from e
+
 
 # --- Users ---
 def create_user(username: str, password: str, role: str, costo_orario: float):
