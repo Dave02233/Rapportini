@@ -22,8 +22,9 @@
   <p id="status">token: nessuno</p>
 
   <label>Base URL
-    <input id="base" type="text" value="http://127.0.0.1:8000" />
+    <input id="base" type="text" value="" />
   </label>
+  <p style="color:#666;font-size:0.9rem">Deve coincidere con l’host della pagina (localhost ≠ 127.0.0.1). Se la bench è servita dall’API, lascia l’origine corrente.</p>
 
   <div class="row">
     <label>user
@@ -68,6 +69,11 @@
   <script>
     let token = localStorage.getItem("bench_token") || "";
     const $ = (id) => document.getElementById(id);
+    // Same-origin quando la pagina è su /bench o / (evita CORS localhost vs 127.0.0.1)
+    $("base").value =
+      location.protocol === "http:" || location.protocol === "https:"
+        ? location.origin
+        : "http://127.0.0.1:8000";
     const setStatus = () => {
       $("status").textContent = token ? "token: presente (" + token.slice(0, 16) + "…)" : "token: nessuno";
     };
@@ -83,7 +89,7 @@
       { label: "POST /ticket", method: "POST", path: "/ticket",
         body: '{\n  "commessa_id": 1,\n  "nome": "Elettrico",\n  "descrizione": "test",\n  "costo_totale": 100,\n  "stato": "in_corso"\n}' },
       { label: "POST /interventi", method: "POST", path: "/interventi",
-        body: '{\n  "cliente_id": 1,\n  "ticket_id": 1,\n  "ore_lavorate": 2,\n  "ore_totali": 2,\n  "data": "2026-10-03"\n}' },
+        body: '{\n  "cliente_id": 1,\n  "ticket_id": 1,\n  "ore_lavorate": 2,\n  "ore_viaggio": 1,\n  "km": 40,\n  "ore_totali": 3,\n  "data": "2026-10-03",\n  "note": "test"\n}' },
       { label: "POST /materiali", method: "POST", path: "/materiali",
         body: '{\n  "nome": "Cavo",\n  "descrizione": "test",\n  "costo_unitario": 5.5,\n  "unita": "m",\n  "fornitore": "X"\n}' },
       { label: "POST /materiali-utilizzati", method: "POST", path: "/materiali-utilizzati",
@@ -115,7 +121,14 @@
         headers["Content-Type"] = "application/json";
         body = bodyText;
       }
-      const res = await fetch(url, { method, headers, body });
+      let res;
+      try {
+        res = await fetch(url, { method, headers, body });
+      } catch (e) {
+        throw new Error(
+          "Server non raggiungibile (o origine diversa: controlla Base URL). " + e.message
+        );
+      }
       const text = await res.text();
       let pretty = text;
       try { pretty = JSON.stringify(JSON.parse(text), null, 2); } catch (_) {}

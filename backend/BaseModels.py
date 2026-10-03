@@ -39,7 +39,6 @@ class TicketCreate(BaseModel):
     commessa_id: int
     nome: str
     descrizione: str | None = None
-    costo_totale: float
     stato: str
 
 class InterventoCreate(BaseModel):
@@ -47,8 +46,11 @@ class InterventoCreate(BaseModel):
     cliente_id: int
     ticket_id: int | None = None
     ore_lavorate: int
+    ore_viaggio: int = 0
+    km: int = 0
     ore_totali: int
     data: date
+    note: str | None = None
 
 class MaterialeCreate(BaseModel):
     nome: str

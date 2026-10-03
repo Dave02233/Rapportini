@@ -10,7 +10,7 @@ import auth
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -214,6 +214,16 @@ def get_commesse(current_user=Depends(auth.get_current_user)):
     except RuntimeError as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
+# Deve stare prima di /commesse/{commessa_id}: altrimenti "riepilogo" viene letto come id (422)
+@app.get("/commesse/riepilogo")
+def get_commesse_riepilogo(current_user=Depends(auth.get_current_user)):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Forbidden")
+    try:
+        return database.get_commesse_riepilogo()
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
 @app.get("/commesse/{commessa_id}")
 def get_commessa(commessa_id: int, current_user=Depends(auth.get_current_user)):
     if current_user["role"] not in ("admin", "tecnico"):
@@ -272,7 +282,7 @@ def create_ticket(ticket: BaseModels.TicketCreate, current_user=Depends(auth.get
     if ticket.stato not in ("in_corso", "completato", "annullato"):
         raise HTTPException(status_code=400, detail="Invalid stato")
     try:
-        created = database.create_ticket(ticket.commessa_id, ticket.nome, ticket.descrizione, ticket.costo_totale, ticket.stato)
+        created = database.create_ticket(ticket.commessa_id, ticket.nome, ticket.descrizione, ticket.stato)
         return created
     except ValueError as e:
         raise HTTPException(status_code=409, detail=str(e)) from e
@@ -318,7 +328,7 @@ def update_ticket(ticket_id: int, ticket: BaseModels.TicketCreate, current_user=
     if ticket.stato not in ("in_corso", "completato", "annullato"):
         raise HTTPException(status_code=400, detail="Invalid stato")
     try:
-        updated = database.update_ticket(ticket_id, ticket.commessa_id, ticket.nome, ticket.descrizione, ticket.costo_totale, ticket.stato)
+        updated = database.update_ticket(ticket_id, ticket.commessa_id, ticket.nome, ticket.descrizione, ticket.stato)
         return updated
     except LookupError as e:
         raise HTTPException(status_code=404, detail=str(e)) from e
@@ -348,7 +358,17 @@ def create_intervento(intervento: BaseModels.InterventoCreate, current_user=Depe
     if current_user["role"] == "admin" and intervento.user_id is not None:
         user_id = intervento.user_id
     try:
-        created = database.create_intervento(user_id, intervento.cliente_id, intervento.ticket_id, intervento.ore_lavorate, intervento.ore_totali, intervento.data)
+        created = database.create_intervento(
+            user_id,
+            intervento.cliente_id,
+            intervento.ticket_id,
+            intervento.ore_lavorate,
+            intervento.ore_viaggio,
+            intervento.km,
+            intervento.ore_totali,
+            intervento.data,
+            intervento.note,
+        )
         return created
     except ValueError as e:
         raise HTTPException(status_code=409, detail=str(e)) from e
@@ -413,7 +433,18 @@ def update_intervento(intervento_id: int, intervento: BaseModels.InterventoCreat
         user_id = existing["user_id"]
         if current_user["role"] == "admin" and intervento.user_id is not None:
             user_id = intervento.user_id
-        updated = database.update_intervento(intervento_id, user_id, intervento.cliente_id, intervento.ticket_id, intervento.ore_lavorate, intervento.ore_totali, intervento.data)
+        updated = database.update_intervento(
+            intervento_id,
+            user_id,
+            intervento.cliente_id,
+            intervento.ticket_id,
+            intervento.ore_lavorate,
+            intervento.ore_viaggio,
+            intervento.km,
+            intervento.ore_totali,
+            intervento.data,
+            intervento.note,
+        )
         return updated
     except LookupError as e:
         raise HTTPException(status_code=404, detail=str(e)) from e

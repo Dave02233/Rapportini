@@ -1,0 +1,495 @@
+.app-home {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(ellipse 80% 50% at 10% 0%, rgba(141, 153, 174, 0.28), transparent 55%),
+    var(--color-bg);
+  color: var(--color-ink);
+  font-family: "Manrope", system-ui, sans-serif;
+}
+
+.app-home__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+  padding: 0.85rem clamp(1rem, 4vw, 2rem);
+  background: var(--color-ink);
+  color: var(--color-bg);
+}
+
+.app-home__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.app-home__logo {
+  height: 36px;
+  width: auto;
+  display: block;
+}
+
+.app-home__header-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.app-home__header-meta {
+  margin: 0.15rem 0 0;
+  font-size: 0.8rem;
+  opacity: 0.75;
+}
+
+.app-home__logout {
+  padding: 0.55rem 1rem;
+  border: 1px solid rgba(247, 249, 251, 0.35);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-bg);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.app-home__logout:hover {
+  background: rgba(247, 249, 251, 0.1);
+}
+
+/* Nav admin: seconda riga dell'header, scorre in orizzontale su mobile */
+.app-home__nav {
+  flex-basis: 100%;
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  margin: 0 -0.5rem -0.85rem;
+  border-top: 1px solid rgba(247, 249, 251, 0.12);
+}
+
+.app-home__nav-link {
+  flex-shrink: 0;
+  padding: 0.75rem 0.6rem;
+  color: rgba(247, 249, 251, 0.65);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+}
+
+.app-home__nav-link:hover {
+  color: var(--color-bg);
+}
+
+.app-home__nav-link--active {
+  color: var(--color-bg);
+  border-bottom-color: var(--color-bg);
+}
+
+.app-home__main {
+  flex: 1;
+  padding: 1.25rem clamp(1rem, 4vw, 2rem) 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.app-home__section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.app-home__section-head h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.app-home__hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+.app-home__section-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.app-home__new {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.7rem 1.15rem;
+  min-height: 2.75rem;
+  background: var(--color-ink);
+  color: var(--color-bg);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: 4px;
+  border: none;
+  box-sizing: border-box;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.app-home__new:hover:not(:disabled) {
+  background: #1a1c2e;
+}
+
+.app-home__new:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.app-home__new--secondary {
+  background: transparent;
+  color: var(--color-ink);
+  border: 1px solid var(--color-ink);
+}
+
+.app-home__new--secondary:hover:not(:disabled) {
+  background: rgba(43, 45, 66, 0.06);
+}
+
+.app-home__select-all {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  cursor: pointer;
+}
+
+.app-home__select-all input,
+.app-home__check input {
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: var(--color-ink);
+  cursor: pointer;
+}
+
+.app-home__check {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.app-home__row--selected {
+  border-color: var(--color-ink);
+  background: rgba(43, 45, 66, 0.03);
+}
+
+.app-home__filters {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid var(--color-surface);
+  border-radius: 4px;
+}
+
+@media (min-width: 560px) {
+  .app-home__filters {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 900px) {
+  .app-home__filters {
+    grid-template-columns: 1.3fr 1fr 1fr 1fr 1fr auto;
+    align-items: end;
+  }
+
+  .app-home__filters--admin {
+    grid-template-columns: 1.3fr 1.1fr 1fr 1fr 1fr 1fr auto;
+  }
+}
+
+.app-home__filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.app-home__filter label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-muted);
+}
+
+.app-home__filter select,
+.app-home__filter input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.65rem 0.75rem;
+  min-height: 2.75rem;
+  border: 1px solid var(--color-surface-strong);
+  border-radius: 4px;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 0.95rem;
+}
+
+.app-home__filter select:focus,
+.app-home__filter input:focus {
+  outline: none;
+  border-color: var(--color-ink);
+  box-shadow: 0 0 0 3px rgba(43, 45, 66, 0.12);
+}
+
+.app-home__filters-reset {
+  min-height: 2.75rem;
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--color-surface-strong);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.app-home__filters-reset:hover {
+  border-color: var(--color-ink);
+}
+
+.app-home__status,
+.app-home__empty {
+  margin: 0;
+  padding: 1.25rem 0;
+  color: var(--color-muted);
+  font-size: 0.95rem;
+}
+
+.app-home__error {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  font-size: 0.9rem;
+  color: var(--color-danger-strong);
+  background: rgba(239, 35, 60, 0.08);
+  border-left: 3px solid var(--color-danger);
+}
+
+.app-home__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+/* Riga: tutto scorribile in orizzontale (nessuno sticky) */
+.app-home__row {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--color-surface);
+  border-radius: 4px;
+  background: #fff;
+  scrollbar-width: thin;
+}
+
+.app-home__row-inner {
+  display: flex;
+  align-items: stretch;
+  min-width: min-content;
+}
+
+.app-home__sticky {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.9rem 1rem;
+  flex-shrink: 0;
+}
+
+.app-home__cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.app-home__cell--date {
+  width: 5.5rem;
+  flex-shrink: 0;
+}
+
+.app-home__cell--cliente {
+  width: min(42vw, 11rem);
+  flex-shrink: 0;
+}
+
+.app-home__cell--ore {
+  width: 4.5rem;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.app-home__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  margin-left: 0.25rem;
+}
+
+.app-home__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0.7rem;
+  min-height: 2.25rem;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+
+.app-home__btn--edit {
+  background: var(--color-ink);
+  color: var(--color-bg);
+}
+
+.app-home__btn--edit:hover {
+  background: #1a1c2e;
+}
+
+.app-home__btn--danger {
+  background: transparent;
+  color: var(--color-danger-strong);
+  border: 1px solid var(--color-danger);
+}
+
+.app-home__btn--danger:hover:not(:disabled) {
+  background: rgba(239, 35, 60, 0.08);
+}
+
+.app-home__btn--ghost {
+  background: transparent;
+  color: var(--color-ink);
+  border: 1px solid var(--color-surface-strong);
+}
+
+.app-home__btn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.app-home__modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(43, 45, 66, 0.45);
+}
+
+.app-home__modal {
+  width: min(100%, 22rem);
+  padding: 1.35rem 1.25rem;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 12px 40px rgba(43, 45, 66, 0.2);
+}
+
+.app-home__modal h3 {
+  margin: 0 0 0.65rem;
+  font-size: 1.15rem;
+  letter-spacing: -0.02em;
+}
+
+.app-home__modal p {
+  margin: 0 0 1.25rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--color-muted);
+}
+
+.app-home__modal p strong {
+  color: var(--color-ink);
+  font-weight: 600;
+}
+
+.app-home__modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.app-home__modal-actions .app-home__btn {
+  min-width: 6.5rem;
+  min-height: 2.75rem;
+}
+
+.app-home__label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-muted);
+}
+
+.app-home__value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-home__value--muted {
+  font-weight: 500;
+  color: var(--color-muted);
+}
+
+.app-home__extra {
+  display: flex;
+  gap: 1.25rem;
+  align-items: center;
+  padding: 0.9rem 1.25rem 0.9rem 0.5rem;
+  flex-shrink: 0;
+  border-left: 1px solid var(--color-surface);
+}
+
+.app-home__extra .app-home__cell {
+  min-width: 5.5rem;
+}
+
+@media (min-width: 720px) {
+  .app-home__cell--cliente {
+    width: 14rem;
+  }
+}

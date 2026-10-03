@@ -19,20 +19,22 @@ Regole Cursor: `.cursor/rules/senior-mentor.mdc`.
 
 ## Dove siamo (stato attuale)
 
-Fase 1 **API + DB** — chiusa per il percorso attuale.  
-Fase 2 **Web React** — in avvio (scaffold Vite presente). Checklist e architettura UI: [`frontend_guide.md`](frontend_guide.md).
+Fase 1 **API + DB** — chiusa.  
+Fase 2 **Web React** — area **tecnico** e **admin** operative (CRUD, mappa, dettaglio economico commessa). Guida: [`frontend/frontend_guide.md`](frontend/frontend_guide.md).
 
 | Fatto | Non ancora |
 |-------|------------|
-| Docker PostGIS, schema `init_db`, psycopg `dict_row` | Filtri data / ricerca avanzata |
-| Layer `database.py`: CRUD completo (users, posizioni, clienti, commesse, ticket, interventi, materiali, materiali_utilizzati) | Password change su update user |
-| Auth JWT + endpoint HTTP in `main.py` / `BaseModels.py` (ruoli: admin scrive anagrafiche; tecnico legge anagrafiche e gestisce i propri interventi; materiali solo admin) | Frontend React (login, CRUD UI, stats/grafici) |
-| Validazione `role` / `stato`; geo lat/lon ↔ PostGIS; `LookupError`→404 / `ValueError`→409 | PDF, Flutter |
-| Bootstrap admin idempotente in `init_db` (seed `admin`/`admin` se non esiste già un admin) | HTTPS / TLS (solo al deploy; in locale HTTP ok) |
-| Bench throwaway `test/index.html` servita da API (`/` e `/bench`) per smoke test | |
-| CORS whitelist `http://localhost:5173` (dev Vite; same-origin bench non ne ha bisogno) | |
+| Docker PostGIS, schema `init_db`, CRUD `database.py`, auth JWT, bootstrap admin | Password change su update user |
+| Interventi con `ore_viaggio`, `km`, `note`; `ore_totali` = lavorate + viaggio (UI) | `UniqueViolation` su `nome` commessa/ticket → 409 (oggi 500) |
+| Frontend: Landing / Login (brand TEC Energie), AuthContext, `apiFetch`, errori in italiano | Generazione PDF rapportino congiunto |
+| Area tecnico `/app`: lista, filtri, CRUD intervento, cascade cliente → commessa → ticket | Stats / grafici |
+| Rapportino congiunto: selezione → revisione → conferma (PDF stub → torna a `/app`) | Serve SPA da FastAPI in prod; HTTPS al deploy |
+| Area admin `/admin`: interventi di tutti + filtro utente; CRUD utenti/clienti/commesse/ticket/materiali | Flutter + GPS |
+| Mappa commesse (Leaflet), dettaglio budget − spese, picker lat/lon su form | Lettura `users_positions` (fase GPS) |
+| `ticket.costo_totale` ricalcolato da trigger DB (ore × `costo_orario` attuale) | |
+| Bench `test/index.html` (`/bench`); CORS `http://localhost:5173` | |
 
-**Prossimo passo tipico:** seguire le checkbox in [`frontend_guide.md`](frontend_guide.md) (Fase A: router + AuthContext → B: login UI → C/D aree tecnico/admin).
+**Prossimo passo tipico:** **PDF** del rapportino congiunto (hook già in UI), oppure polish backend (409 su unique). Vedi Fase E in [`frontend/frontend_guide.md`](frontend/frontend_guide.md).
 
 ## Cosa fa (obiettivo prodotto)
 
@@ -50,7 +52,7 @@ Fase 2 **Web React** — in avvio (scaffold Vite presente). Checklist e architet
 |-------|------------|
 | API | FastAPI + Uvicorn |
 | DB | PostgreSQL 17 + PostGIS (`postgis/postgis:17-3.5-alpine`); SQL diretto (psycopg, niente ORM) |
-| Web | React + Vite (SPA); JS + CSS plain; `fetch`; react-router; auth via Context + JWT in `localStorage` |
+| Web | React + Vite (SPA); JS + CSS plain; `fetch`; react-router; auth via Context + JWT in `localStorage`; mappa = Leaflet diretto (no react-leaflet) |
 | Grafici (più avanti) | Una lib (es. Recharts), quando ci sono le viste stats |
 | Mobile (fase 4) | Flutter / Dart — **non** React Native |
 | PDF | Generazione lato server (stessa API) |
@@ -76,7 +78,7 @@ Materiale  (catalogo)
 - **Commessa**: lavoro strutturato (es. impianto), con budget e posizione.
 - **Ticket**: sempre sotto commessa (es. elettrico / software / meccanico).
 - **Intervento**: attività sul cliente; con `ticket_id` = legato a un ticket di commessa; senza = consuntivo diretto.
-- Costo ore ≈ `ore × user.costo_orario`; materiali a parte su commessa.
+- Costo ore su ticket: trigger DB (`ore_totali × costo_orario` attuale); materiali a parte su commessa. Spese commessa = Σ ticket + Σ materiali_utilizzati. Interventi senza ticket non pesano su nessuna commessa.
 
 ### User / Auth
 
@@ -126,7 +128,7 @@ Auth: JWT Bearer (`sub`, `role`, `exp`).
 |-------|------|
 | `commessa_id` | FK → commesse, obbligatorio |
 | `nome` / `descrizione` | |
-| `costo_totale` | `NUMERIC(10, 2)` |
+| `costo_totale` | `NUMERIC(10, 2)` — somma `ore_totali × users.costo_orario` degli interventi del ticket (trigger su `interventi` e su `users.costo_orario`; tariffa **attuale**, non storica). Non si scrive dal frontend. |
 | `stato` | `in_corso` \| `completato` \| `annullato` |
 
 ### Intervento
@@ -136,8 +138,12 @@ Auth: JWT Bearer (`sub`, `role`, `exp`).
 | `user_id` | FK → users, obbligatorio |
 | `cliente_id` | FK → clienti, obbligatorio |
 | `ticket_id` | FK → ticket, **opzionale** (`ON DELETE SET NULL`) |
-| `ore_lavorate` / `ore_totali` | INTEGER (da chiarire semantica) |
+| `ore_lavorate` | INTEGER, > 0 |
+| `ore_viaggio` | INTEGER, ≥ 0 |
+| `km` | INTEGER, ≥ 0 |
+| `ore_totali` | INTEGER (= lavorate + viaggio, calcolato in UI) |
 | `data` | DATE |
+| `note` | TEXT, opzionale |
 
 ### Materiali (catalogo)
 
@@ -169,8 +175,8 @@ Tabella di sistema `spatial_ref_sys`: non toccarla (SRID, es. 4326).
 ## Ordine di lavoro
 
 1. **API + DB** — schema, auth, CRUD HTTP, bootstrap admin, bench smoke ← *chiusa*
-2. **Web React** ← *in corso* — vedi [`frontend_guide.md`](frontend_guide.md)
-3. **Stampa PDF**
+2. **Web React** — tecnico + admin (CRUD, mappa, riepilogo commesse) ← *quasi chiusa*; restano polish minori — [`frontend/frontend_guide.md`](frontend/frontend_guide.md)
+3. **Stampa PDF** ← *prossimo* (hook già in rapportino congiunto)
 4. **Flutter + GPS** (scrive su `users_positions`)
 
 ## Struttura repo
@@ -188,7 +194,9 @@ Tabella di sistema `spatial_ref_sys`: non toccarla (SRID, es. 4326).
 ├── test/
 │   └── index.html           # bench API throwaway (`/` e `/bench`)
 ├── frontend/                # React + Vite (fase 2)
-├── frontend_guide.md        # checklist / architettura UI
+│   ├── frontend_guide.md    # checklist / architettura UI
+│   ├── public/logoTECEnergie.png
+│   └── src/pages/           # Landing, Login, AppHome, admin/…
 ├── mobile/                  # Flutter (fase 4)
 └── README.md
 ```

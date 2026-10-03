@@ -6,6 +6,7 @@
   --platinum-muted: #edf2f4; /* superfici secondarie / pannelli */
   --punch-red: #ef233c;
   --flag-red: #d90429;
+  --sea-green: #2d936c;
 
   /* Ruoli (usa questi nel UI) */
   --color-bg: var(--platinum);
@@ -15,6 +16,7 @@
   --color-muted: var(--lavender-grey);
   --color-danger: var(--punch-red);
   --color-danger-strong: var(--flag-red);
+  --color-success: var(--sea-green);
 
   color: var(--color-ink);
   background-color: var(--color-bg);

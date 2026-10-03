@@ -70,6 +70,8 @@ def init_db():
     cliente_id INTEGER NOT NULL REFERENCES clienti(id),
     ticket_id INTEGER REFERENCES ticket(id) ON DELETE SET NULL,
     ore_lavorate INTEGER NOT NULL,
+    ore_viaggio INTEGER NOT NULL,
+    km INTEGER NOT NULL,
     ore_totali INTEGER NOT NULL,
     data DATE NOT NULL,
     note TEXT
@@ -92,6 +94,49 @@ def init_db():
     quantita INTEGER NOT NULL,
     costo_totale NUMERIC(10, 2) NOT NULL
     );
+
+    -- ticket.costo_totale = somma (ore_totali * costo_orario attuale) degli interventi del ticket
+    CREATE OR REPLACE FUNCTION ricalcola_costo_ticket(t_id INTEGER) RETURNS VOID AS $$
+        UPDATE ticket SET costo_totale = (
+            SELECT COALESCE(SUM(i.ore_totali * u.costo_orario), 0)
+            FROM interventi i JOIN users u ON u.id = i.user_id
+            WHERE i.ticket_id = t_id
+        )
+        WHERE id = t_id;
+    $$ LANGUAGE sql;
+
+    CREATE OR REPLACE FUNCTION trg_interventi_costo_ticket() RETURNS TRIGGER AS $$
+    BEGIN
+        IF TG_OP IN ('UPDATE', 'DELETE') THEN
+            PERFORM ricalcola_costo_ticket(OLD.ticket_id);
+        END IF;
+        IF TG_OP IN ('INSERT', 'UPDATE') THEN
+            PERFORM ricalcola_costo_ticket(NEW.ticket_id);
+        END IF;
+        RETURN NULL;
+    END;
+    $$ LANGUAGE plpgsql;
+
+    DROP TRIGGER IF EXISTS interventi_costo_ticket ON interventi;
+    CREATE TRIGGER interventi_costo_ticket
+    AFTER INSERT OR UPDATE OR DELETE ON interventi
+    FOR EACH ROW EXECUTE FUNCTION trg_interventi_costo_ticket();
+
+    CREATE OR REPLACE FUNCTION trg_users_costo_ticket() RETURNS TRIGGER AS $$
+    BEGIN
+        PERFORM ricalcola_costo_ticket(ticket_id)
+        FROM (SELECT DISTINCT ticket_id FROM interventi WHERE user_id = NEW.id) AS t;
+        RETURN NULL;
+    END;
+    $$ LANGUAGE plpgsql;
+
+    DROP TRIGGER IF EXISTS users_costo_ticket ON users;
+    CREATE TRIGGER users_costo_ticket
+    AFTER UPDATE OF costo_orario ON users
+    FOR EACH ROW WHEN (OLD.costo_orario IS DISTINCT FROM NEW.costo_orario)
+    EXECUTE FUNCTION trg_users_costo_ticket();
+
+    SELECT ricalcola_costo_ticket(id) FROM ticket;
 
     """
     
@@ -338,6 +383,21 @@ def get_commesse():
     except psycopg.Error as e:
         raise RuntimeError(f"get_commesse failed: {e}") from e
 
+def get_commesse_riepilogo():
+    # Subquery separate: un JOIN su ticket e materiali insieme moltiplicherebbe le righe
+    get_commesse_riepilogo_sql = """
+    SELECT c.id, c.cliente_id, c.data_inizio, c.data_fine, c.nome, c.descrizione, c.stato, c.budget,
+        ST_Y(c.posizione) AS lat, ST_X(c.posizione) AS lon,
+        COALESCE((SELECT SUM(t.costo_totale) FROM ticket t WHERE t.commessa_id = c.id), 0) AS costo_ticket,
+        COALESCE((SELECT SUM(m.costo_totale) FROM materiali_utilizzati m WHERE m.commessa_id = c.id), 0) AS costo_materiali
+    FROM commesse c ORDER BY c.nome ASC;
+    """
+    try:
+        with get_connection() as conn:
+            return conn.execute(get_commesse_riepilogo_sql).fetchall()
+    except psycopg.Error as e:
+        raise RuntimeError(f"get_commesse_riepilogo failed: {e}") from e
+
 def get_commessa_by_id(commessa_id: int):
     get_commessa_by_id_sql = """
     SELECT id, cliente_id, data_inizio, data_fine, nome, descrizione, stato, budget, ST_Y(posizione) AS lat, ST_X(posizione) AS lon
@@ -398,14 +458,15 @@ def delete_commessa(commessa_id: int):
         raise RuntimeError(f"delete_commessa failed: {e}") from e
 
 # --- Ticket ---
-def create_ticket(commessa_id: int, nome: str, descrizione: str | None, costo_totale: float, stato: str):
+def create_ticket(commessa_id: int, nome: str, descrizione: str | None, stato: str):
+    # costo_totale parte da 0: lo aggiorna il trigger sugli interventi
     create_ticket_sql = """
-    INSERT INTO ticket (commessa_id, nome, descrizione, costo_totale, stato) VALUES (%s, %s, %s, %s, %s)
+    INSERT INTO ticket (commessa_id, nome, descrizione, costo_totale, stato) VALUES (%s, %s, %s, 0, %s)
     RETURNING id, commessa_id, nome, descrizione, costo_totale, stato;
     """
     try:
         with get_connection() as conn:
-            row = conn.execute(create_ticket_sql, (commessa_id, nome, descrizione, costo_totale, stato)).fetchone()
+            row = conn.execute(create_ticket_sql, (commessa_id, nome, descrizione, stato)).fetchone()
             conn.commit()
             return row
     except ForeignKeyViolation:
@@ -446,14 +507,14 @@ def get_tickets_by_commessa_id(commessa_id: int):
     except psycopg.Error as e:
         raise RuntimeError(f"get_tickets_by_commessa_id failed: {e}") from e
 
-def update_ticket(ticket_id: int, commessa_id: int, nome: str, descrizione: str | None, costo_totale: float, stato: str):
+def update_ticket(ticket_id: int, commessa_id: int, nome: str, descrizione: str | None, stato: str):
     update_ticket_sql = """
-    UPDATE ticket SET commessa_id = %s, nome = %s, descrizione = %s, costo_totale = %s, stato = %s WHERE id = %s
+    UPDATE ticket SET commessa_id = %s, nome = %s, descrizione = %s, stato = %s WHERE id = %s
     RETURNING id, commessa_id, nome, descrizione, costo_totale, stato;
     """
     try:
         with get_connection() as conn:
-            row = conn.execute(update_ticket_sql, (commessa_id, nome, descrizione, costo_totale, stato, ticket_id)).fetchone()
+            row = conn.execute(update_ticket_sql, (commessa_id, nome, descrizione, stato, ticket_id)).fetchone()
             conn.commit()
             if row is None:
                 raise LookupError("Ticket not found")
@@ -478,14 +539,28 @@ def delete_ticket(ticket_id: int):
         raise RuntimeError(f"delete_ticket failed: {e}") from e
 
 # --- Interventi ---
-def create_intervento(user_id: int, cliente_id: int, ticket_id: int | None, ore_lavorate: int, ore_totali: int, data: date):
+def create_intervento(
+    user_id: int,
+    cliente_id: int,
+    ticket_id: int | None,
+    ore_lavorate: int,
+    ore_viaggio: int,
+    km: int,
+    ore_totali: int,
+    data: date,
+    note: str | None,
+):
     create_intervento_sql = """
-    INSERT INTO interventi (user_id, cliente_id, ticket_id, ore_lavorate, ore_totali, data) VALUES (%s, %s, %s, %s, %s, %s)
-    RETURNING id, user_id, cliente_id, ticket_id, ore_lavorate, ore_totali, data;
+    INSERT INTO interventi (user_id, cliente_id, ticket_id, ore_lavorate, ore_viaggio, km, ore_totali, data, note)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+    RETURNING id, user_id, cliente_id, ticket_id, ore_lavorate, ore_viaggio, km, ore_totali, data, note;
     """
     try:
         with get_connection() as conn:
-            row = conn.execute(create_intervento_sql, (user_id, cliente_id, ticket_id, ore_lavorate, ore_totali, data)).fetchone()
+            row = conn.execute(
+                create_intervento_sql,
+                (user_id, cliente_id, ticket_id, ore_lavorate, ore_viaggio, km, ore_totali, data, note),
+            ).fetchone()
             conn.commit()
             return row
     except ForeignKeyViolation:
@@ -493,9 +568,11 @@ def create_intervento(user_id: int, cliente_id: int, ticket_id: int | None, ore_
     except psycopg.Error as e:
         raise RuntimeError(f"create_intervento failed: {e}") from e
 
+_INTERVENTO_COLS = "id, user_id, cliente_id, ticket_id, ore_lavorate, ore_viaggio, km, ore_totali, data, note"
+
 def get_interventi():
-    get_interventi_sql = """
-    SELECT id, user_id, cliente_id, ticket_id, ore_lavorate, ore_totali, data FROM interventi ORDER BY data DESC;
+    get_interventi_sql = f"""
+    SELECT {_INTERVENTO_COLS} FROM interventi ORDER BY data DESC;
     """
     try:
         with get_connection() as conn:
@@ -504,8 +581,8 @@ def get_interventi():
         raise RuntimeError(f"get_interventi failed: {e}") from e
 
 def get_intervento_by_id(intervento_id: int):
-    get_intervento_by_id_sql = """
-    SELECT id, user_id, cliente_id, ticket_id, ore_lavorate, ore_totali, data FROM interventi WHERE id = %s;
+    get_intervento_by_id_sql = f"""
+    SELECT {_INTERVENTO_COLS} FROM interventi WHERE id = %s;
     """
     try:
         with get_connection() as conn:
@@ -517,8 +594,8 @@ def get_intervento_by_id(intervento_id: int):
         raise RuntimeError(f"get_intervento_by_id failed: {e}") from e
 
 def get_interventi_by_user_id(user_id: int):
-    get_interventi_by_user_id_sql = """
-    SELECT id, user_id, cliente_id, ticket_id, ore_lavorate, ore_totali, data FROM interventi WHERE user_id = %s ORDER BY data DESC;
+    get_interventi_by_user_id_sql = f"""
+    SELECT {_INTERVENTO_COLS} FROM interventi WHERE user_id = %s ORDER BY data DESC;
     """
     try:
         with get_connection() as conn:
@@ -527,8 +604,8 @@ def get_interventi_by_user_id(user_id: int):
         raise RuntimeError(f"get_interventi_by_user_id failed: {e}") from e
 
 def get_interventi_by_cliente_id(cliente_id: int):
-    get_interventi_by_cliente_id_sql = """
-    SELECT id, user_id, cliente_id, ticket_id, ore_lavorate, ore_totali, data FROM interventi WHERE cliente_id = %s ORDER BY data DESC;
+    get_interventi_by_cliente_id_sql = f"""
+    SELECT {_INTERVENTO_COLS} FROM interventi WHERE cliente_id = %s ORDER BY data DESC;
     """
     try:
         with get_connection() as conn:
@@ -536,14 +613,30 @@ def get_interventi_by_cliente_id(cliente_id: int):
     except psycopg.Error as e:
         raise RuntimeError(f"get_interventi_by_cliente_id failed: {e}") from e
 
-def update_intervento(intervento_id: int, user_id: int, cliente_id: int, ticket_id: int | None, ore_lavorate: int, ore_totali: int, data: date):
-    update_intervento_sql = """
-    UPDATE interventi SET user_id = %s, cliente_id = %s, ticket_id = %s, ore_lavorate = %s, ore_totali = %s, data = %s WHERE id = %s
-    RETURNING id, user_id, cliente_id, ticket_id, ore_lavorate, ore_totali, data;
+def update_intervento(
+    intervento_id: int,
+    user_id: int,
+    cliente_id: int,
+    ticket_id: int | None,
+    ore_lavorate: int,
+    ore_viaggio: int,
+    km: int,
+    ore_totali: int,
+    data: date,
+    note: str | None,
+):
+    update_intervento_sql = f"""
+    UPDATE interventi SET user_id = %s, cliente_id = %s, ticket_id = %s,
+        ore_lavorate = %s, ore_viaggio = %s, km = %s, ore_totali = %s, data = %s, note = %s
+    WHERE id = %s
+    RETURNING {_INTERVENTO_COLS};
     """
     try:
         with get_connection() as conn:
-            row = conn.execute(update_intervento_sql, (user_id, cliente_id, ticket_id, ore_lavorate, ore_totali, data, intervento_id)).fetchone()
+            row = conn.execute(
+                update_intervento_sql,
+                (user_id, cliente_id, ticket_id, ore_lavorate, ore_viaggio, km, ore_totali, data, note, intervento_id),
+            ).fetchone()
             conn.commit()
             if row is None:
                 raise LookupError("Intervento not found")
@@ -554,8 +647,8 @@ def update_intervento(intervento_id: int, user_id: int, cliente_id: int, ticket_
         raise RuntimeError(f"update_intervento failed: {e}") from e
 
 def delete_intervento(intervento_id: int):
-    delete_intervento_sql = """
-    DELETE FROM interventi WHERE id = %s RETURNING id, user_id, cliente_id, ticket_id, ore_lavorate, ore_totali, data;
+    delete_intervento_sql = f"""
+    DELETE FROM interventi WHERE id = %s RETURNING {_INTERVENTO_COLS};
     """
     try:
         with get_connection() as conn:

@@ -1,0 +1,279 @@
+/* Pagine admin: riusano AppHome.css (lista, righe, modale) e NuovoIntervento.css (campi form) */
+
+.admin-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  max-width: 40rem;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 1.25rem;
+  background: #fff;
+  border: 1px solid var(--color-surface);
+  border-radius: 4px;
+}
+
+.admin-panel h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+button.nuovo__cancel {
+  cursor: pointer;
+}
+
+button.nuovo__cancel:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.app-home__filters.admin__filters {
+  grid-template-columns: minmax(0, 24rem);
+}
+
+.admin__cell--main {
+  width: min(42vw, 12rem);
+  flex-shrink: 0;
+}
+
+.admin__cell--short {
+  width: 7.5rem;
+  flex-shrink: 0;
+}
+
+.admin__cell--text {
+  max-width: 18rem;
+}
+
+.admin__value--danger {
+  color: var(--color-danger-strong);
+}
+
+.admin__field-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.admin__desc {
+  margin: 0;
+  max-width: 40rem;
+  line-height: 1.45;
+}
+
+.app-home__new.admin__btn-danger {
+  background: transparent;
+  color: var(--color-danger-strong);
+  border: 1px solid var(--color-danger);
+}
+
+.app-home__new.admin__btn-danger:hover:not(:disabled) {
+  background: rgba(239, 35, 60, 0.08);
+}
+
+/* Mappe (Leaflet) */
+.map {
+  width: 100%;
+  border: 1px solid var(--color-surface);
+  border-radius: 4px;
+  background: var(--color-surface);
+  /* i pane Leaflet hanno z-index fino a 1000: così restano sotto la modale */
+  isolation: isolate;
+}
+
+.map--picker {
+  height: 260px;
+}
+
+.map--overview {
+  height: min(65vh, 560px);
+  min-height: 320px;
+}
+
+/* CSS invece degli attributi SVG di Leaflet: così si usano le variabili della palette */
+.map-dot {
+  stroke: #fff;
+  stroke-width: 2px;
+  fill-opacity: 1;
+}
+
+.map-dot--ok {
+  fill: var(--color-ink);
+}
+
+.map-dot--over {
+  fill: var(--color-danger);
+}
+
+.map-dot--closed {
+  fill: var(--color-muted);
+  fill-opacity: 0.75;
+}
+
+.map.leaflet-container {
+  font-family: inherit;
+}
+
+.map-label {
+  font-weight: 700;
+}
+
+.leaflet-tooltip.map-label {
+  padding: 2px 6px;
+  font-size: 0.8rem;
+}
+
+/* Due classi: devono battere il colore di .leaflet-tooltip */
+.map-label.map-label--in_corso {
+  color: var(--color-success);
+}
+
+.map-label.map-label--completata {
+  color: var(--color-muted);
+}
+
+.map-label.map-label--annullata {
+  color: var(--color-danger);
+}
+
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+.map-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.map-legend__dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+}
+
+.map-legend__dot--ok {
+  background: var(--color-ink);
+}
+
+.map-legend__dot--over {
+  background: var(--color-danger);
+}
+
+.map-legend__dot--closed {
+  background: var(--color-muted);
+}
+
+/* Dettaglio commessa */
+.admin-stats {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: #fff;
+  border: 1px solid var(--color-surface);
+  border-radius: 4px;
+}
+
+.admin-stats__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.admin-stats__item strong {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.admin-stats__sub {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+}
+
+.admin-stats__bar {
+  grid-column: 1 / -1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.admin-stats__fill {
+  height: 100%;
+  background: var(--color-ink);
+}
+
+.admin-stats__fill--over {
+  background: var(--color-danger);
+}
+
+.admin-stats__perc {
+  grid-column: 1 / -1;
+  margin: -0.5rem 0 0;
+  font-size: 0.8rem;
+  color: var(--color-muted);
+}
+
+.admin-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.admin-section__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.admin-section__head h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.admin-section__head a {
+  color: var(--color-ink);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.cong__table.admin__table {
+  min-width: 0;
+}
+
+.cong__table .admin__num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.admin__total {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  background: #fff;
+  border: 1px solid var(--color-surface);
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+@media (min-width: 640px) {
+  .admin-stats {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 720px) {
+  .admin__cell--main {
+    width: 15rem;
+  }
+}
