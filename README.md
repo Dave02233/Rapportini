@@ -20,7 +20,7 @@ Regole Cursor: `.cursor/rules/senior-mentor.mdc`.
 ## Dove siamo (stato attuale)
 
 Fase 1 **API + DB** — chiusa per il percorso attuale.  
-Fase 2 **Web React** — in avvio (Node LTS / scaffold Vite).
+Fase 2 **Web React** — in avvio (scaffold Vite presente). Checklist e architettura UI: [`frontend_guide.md`](frontend_guide.md).
 
 | Fatto | Non ancora |
 |-------|------------|
@@ -32,7 +32,7 @@ Fase 2 **Web React** — in avvio (Node LTS / scaffold Vite).
 | Bench throwaway `test/index.html` servita da API (`/` e `/bench`) per smoke test | |
 | CORS whitelist `http://localhost:5173` (dev Vite; same-origin bench non ne ha bisogno) | |
 
-**Prossimo passo tipico:** scaffold Vite + React in `frontend/` → login JWT → liste/form anagrafiche → in seguito grafici (es. Recharts).
+**Prossimo passo tipico:** seguire le checkbox in [`frontend_guide.md`](frontend_guide.md) (Fase A: router + AuthContext → B: login UI → C/D aree tecnico/admin).
 
 ## Cosa fa (obiettivo prodotto)
 
@@ -169,7 +169,7 @@ Tabella di sistema `spatial_ref_sys`: non toccarla (SRID, es. 4326).
 ## Ordine di lavoro
 
 1. **API + DB** — schema, auth, CRUD HTTP, bootstrap admin, bench smoke ← *chiusa*
-2. **Web React** ← *in corso* (scaffold → login → anagrafiche → stats)
+2. **Web React** ← *in corso* — vedi [`frontend_guide.md`](frontend_guide.md)
 3. **Stampa PDF**
 4. **Flutter + GPS** (scrive su `users_positions`)
 
@@ -188,6 +188,7 @@ Tabella di sistema `spatial_ref_sys`: non toccarla (SRID, es. 4326).
 ├── test/
 │   └── index.html           # bench API throwaway (`/` e `/bench`)
 ├── frontend/                # React + Vite (fase 2)
+├── frontend_guide.md        # checklist / architettura UI
 ├── mobile/                  # Flutter (fase 4)
 └── README.md
 ```
