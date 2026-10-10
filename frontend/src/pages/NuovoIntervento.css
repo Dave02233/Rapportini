@@ -1,0 +1,246 @@
+.nuovo {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(ellipse 80% 50% at 10% 0%, rgba(141, 153, 174, 0.28), transparent 55%),
+    var(--color-bg);
+  color: var(--color-ink);
+  font-family: "Manrope", system-ui, sans-serif;
+}
+
+.nuovo__main {
+  flex: 1;
+  padding: 1.25rem clamp(1rem, 4vw, 2rem) 2.5rem;
+  max-width: 28rem;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.nuovo__back {
+  font-size: 0.9rem;
+}
+
+.nuovo__back a {
+  color: var(--color-muted);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+.nuovo__back a:hover {
+  color: var(--color-ink);
+  border-bottom-color: var(--color-ink);
+}
+
+.nuovo__main h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.nuovo__lead {
+  margin: -0.5rem 0 0;
+  font-size: 0.95rem;
+  color: var(--color-muted);
+}
+
+.nuovo__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.nuovo__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.nuovo__field label {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.nuovo__optional {
+  font-weight: 500;
+  color: var(--color-muted);
+}
+
+.nuovo__field input,
+.nuovo__field select,
+.nuovo__field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--color-surface-strong);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 1rem;
+  outline: none;
+  min-height: 2.75rem; /* tap target mobile */
+}
+
+.nuovo__field textarea {
+  min-height: 5rem;
+  resize: vertical;
+}
+
+.nuovo__field input:focus,
+.nuovo__field select:focus,
+.nuovo__field textarea:focus {
+  border-color: var(--color-ink);
+  box-shadow: 0 0 0 3px rgba(43, 45, 66, 0.12);
+}
+
+.nuovo__field select:disabled,
+.nuovo__field input:disabled {
+  background: var(--color-surface);
+  color: var(--color-muted);
+  cursor: not-allowed;
+}
+
+.nuovo__hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-muted);
+}
+
+.nuovo__giorno {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.nuovo__giorno-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--color-surface-strong);
+}
+
+.nuovo__giorno-head span {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.nuovo__rimuovi,
+.nuovo__add {
+  border-radius: 4px;
+  background: #fff;
+  color: var(--color-ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.nuovo__rimuovi {
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--color-surface-strong);
+  font-size: 0.85rem;
+  min-height: 2.25rem;
+}
+
+.nuovo__add {
+  align-self: flex-start;
+  padding: 0.7rem 1rem;
+  border: 1px dashed var(--color-ink);
+  min-height: 2.75rem;
+}
+
+.nuovo__rimuovi:disabled,
+.nuovo__add:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.nuovo__check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.nuovo__check input {
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: var(--color-ink);
+  cursor: pointer;
+}
+
+.nuovo__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+@media (max-width: 420px) {
+  .nuovo__row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.nuovo__error {
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  font-size: 0.9rem;
+  color: var(--color-danger-strong);
+  background: rgba(239, 35, 60, 0.08);
+  border-left: 3px solid var(--color-danger);
+}
+
+.nuovo__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.nuovo__submit {
+  padding: 0.85rem 1.75rem;
+  background: var(--color-ink);
+  color: var(--color-bg);
+  border: none;
+  border-radius: 4px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 2.75rem;
+}
+
+.nuovo__submit:hover:not(:disabled) {
+  background: #1a1c2e;
+}
+
+.nuovo__submit:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.nuovo__cancel {
+  padding: 0.85rem 1.25rem;
+  background: transparent;
+  border: 1px solid var(--color-surface-strong);
+  border-radius: 4px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--color-ink);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  box-sizing: border-box;
+}
+
+.nuovo__cancel:hover {
+  border-color: var(--color-ink);
+}

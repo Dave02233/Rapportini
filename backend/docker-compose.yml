@@ -1,0 +1,64 @@
+name: rapportini
+
+services:
+  db:
+    image: postgis/postgis:17-3.5-alpine
+    container_name: rapportini-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-rapportini}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rapportini}
+      POSTGRES_DB: ${POSTGRES_DB:-rapportini}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    container_name: rapportini-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # In Docker il DB è il servizio "db", non 127.0.0.1 del .env usato in locale
+      DATABASE_URL: postgresql://${POSTGRES_USER:-rapportini}:${POSTGRES_PASSWORD:-rapportini}@db:5432/${POSTGRES_DB:-rapportini}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: rapportini-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  pgdata:

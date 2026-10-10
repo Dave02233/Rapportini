@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Stesso sfondo notte dell'app: #1A1C2E -->
+    <color name="night_bg">#FF1A1C2E</color>
+</resources>

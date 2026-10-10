@@ -1,0 +1,33 @@
+:root {
+  /* Palette grezza */
+  --space-indigo: #2b2d42;
+  --lavender-grey: #8d99ae;
+  --platinum: #f7f9fb; /* più chiaro di #edf2f4 - sfondo pagina */
+  --platinum-muted: #edf2f4; /* superfici secondarie / pannelli */
+  --punch-red: #ef233c;
+  --flag-red: #d90429;
+  --sea-green: #2d936c;
+
+  /* Ruoli (usa questi nel UI) */
+  --color-bg: var(--platinum);
+  --color-surface: var(--platinum-muted);
+  --color-surface-strong: var(--lavender-grey);
+  --color-ink: var(--space-indigo);
+  --color-muted: var(--lavender-grey);
+  --color-danger: var(--punch-red);
+  --color-danger-strong: var(--flag-red);
+  --color-success: var(--sea-green);
+  --color-commessa: var(--space-indigo);
+  --color-ticket: var(--sea-green);
+
+  color: var(--color-ink);
+  background-color: var(--color-bg);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: system-ui, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-ink);
+}

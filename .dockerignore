@@ -1,0 +1,17 @@
+.git
+.cursor
+.venv
+**/__pycache__
+**/*.pyc
+backend/.env
+backend/.venv
+backend/nginx/certs
+frontend/node_modules
+frontend/src
+frontend/public
+frontend/*.md
+frontend/*.json
+frontend/*.js
+frontend/*.html
+!frontend/dist
+!frontend/dist/**
