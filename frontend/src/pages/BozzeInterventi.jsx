@@ -190,16 +190,16 @@ export default function BozzeInterventi() {
                       <span className="bozze__min"> {b.minuti_stimati} min</span>
                     </td>
                     {isAdmin && <td>{STATO[b.stato] || b.stato}</td>}
-                    <td className="bozze__azioni">
+                    <td>
                       {b.stato === "da_revisionare" && (
-                        <>
+                        <div className="bozze__azioni">
                           <Link className="app-home__new" to={`${base}/bozze/${b.id}`}>
                             Revisiona
                           </Link>
                           <button type="button" className="bozze__scarta" onClick={() => setToScarta(b)} disabled={busy}>
                             Scarta
                           </button>
-                        </>
+                        </div>
                       )}
                     </td>
                   </tr>
